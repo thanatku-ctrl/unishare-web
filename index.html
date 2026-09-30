@@ -32,16 +32,34 @@
         </div>
       </div>
 
-      <!-- Quick Status & Profile -->
+      <!-- User Profile & Login Section -->
       <div class="flex items-center gap-3">
-        <button onclick="toggleModal('authModal')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-200 hover:bg-emerald-100 transition-all">
-          <i data-lucide="scan-face" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">ยืนยันตัวตนแล้ว</span>
-        </button>
-        
-        <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500" alt="Avatar">
-          <span class="text-sm font-medium hidden md:inline">น้องเมย์ (คณะวิศวฯ)</span>
+        <!-- Guest View (Not Logged In) -->
+        <div id="guestProfile" class="flex items-center gap-2">
+          <button onclick="toggleModal('loginModal')" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-all shadow-md">
+            <i data-lucide="scan-face" class="w-4 h-4"></i>
+            <span>เข้าสู่ระบบ / สแกนใบหน้า</span>
+          </button>
+        </div>
+
+        <!-- Logged-in View (Initially Hidden) -->
+        <div id="userProfile" class="hidden items-center gap-3">
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+            <span>ยืนยันตัวตนแล้ว</span>
+          </div>
+          
+          <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <img id="currentUserAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500" alt="Avatar">
+            <div class="hidden sm:block text-left">
+              <p id="currentUserName" class="text-xs font-bold text-slate-800">น้องเมย์</p>
+              <p id="currentUserRole" class="text-[10px] text-slate-500">นักศึกษา (วิศวฯ)</p>
+            </div>
+          </div>
+
+          <button onclick="logout()" class="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="ออกจากระบบ">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -55,7 +73,7 @@
       
       <!-- Search Bar -->
       <div class="max-w-xl mx-auto relative">
-        <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="ค้นหาอุปกรณ์การเรียน, ตำรา..." class="w-full py-3.5 pl-12 pr-4 text-slate-800 bg-white rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-300">
+        <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="ค้นหาชุดครุย, หนังสือ, กล้อง หรืออุปกรณ์หอพัก..." class="w-full py-3.5 pl-12 pr-4 text-slate-800 bg-white rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-300">
         <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-4 top-4"></i>
       </div>
     </div>
@@ -73,7 +91,7 @@
         <button onclick="setFilter('buy')" id="filter-buy" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 transition-all">ซื้อขาด</button>
       </div>
 
-      <button onclick="toggleModal('addProductModal')" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-md transition-all">
+      <button onclick="checkAuthAndAction(() => toggleModal('addProductModal'))" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-md transition-all">
         <i data-lucide="plus-circle" class="w-5 h-5"></i>
         <span>ลงประกาศ / เพิ่มรายการ</span>
       </button>
@@ -85,7 +103,50 @@
     </div>
   </main>
 
-  <!-- Modal: Product Detail & Action -->
+  <!-- Modal: Login System (Face Recognition / Student ID) -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="toggleModal('loginModal')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">ยืนยันตัวตนเข้าสู่ระบบ</h3>
+        <p class="text-xs text-slate-500">ระบบยืนยันตัวตนสำหรับนักศึกษาและบุคลากรภายในมหาวิทยาลัย</p>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Option 1: Face Scan -->
+        <button onclick="simulateFaceScan('student')" class="w-full p-4 border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/50 rounded-xl flex items-center gap-4 transition-all text-left group">
+          <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+            <i data-lucide="scan-face" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="font-bold text-slate-800 text-sm">เข้าสู่ระบบด้วย สแกนใบหน้า</p>
+            <p class="text-xs text-slate-500">สแกนใบหน้าและบัตรนักศึกษา (น้องเมย์ - ผู้ใช้ทั่วไป)</p>
+          </div>
+        </button>
+
+        <!-- Option 2: Senior Provider -->
+        <button onclick="simulateFaceScan('senior')" class="w-full p-4 border border-slate-200 hover:border-violet-500 hover:bg-violet-50/50 rounded-xl flex items-center gap-4 transition-all text-left group">
+          <div class="w-10 h-10 bg-violet-600 text-white rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+            <i data-lucide="user-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="font-bold text-slate-800 text-sm">สแกนเข้าสู่ระบบในฐานะ (รุ่นพี่/ผู้ให้เช่า)</p>
+            <p class="text-xs text-slate-500">สำหรับผู้ให้บริการลงรายการสินค้า (พี่ปอนด์ - นิเทศฯ)</p>
+          </div>
+        </button>
+      </div>
+
+      <p class="text-[11px] text-slate-400 text-center mt-6">ระบบตรวจสอบข้อมูลความปลอดภัยร่วมกับมหาวิทยาลัย</p>
+    </div>
+  </div>
+
+  <!-- Modal: Product Detail -->
   <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transition-all">
       <div class="relative">
@@ -123,10 +184,10 @@
             <p id="modalPrice" class="text-xl font-bold text-indigo-600"></p>
           </div>
           <div class="flex gap-2">
-            <button onclick="startChat()" class="px-4 py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-medium flex items-center gap-1.5">
+            <button onclick="checkAuthAndAction(startChat)" class="px-4 py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-medium flex items-center gap-1.5">
               <i data-lucide="message-square" class="w-4 h-4"></i> แชท
             </button>
-            <button onclick="openPayment()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium flex items-center gap-1.5 shadow-md">
+            <button onclick="checkAuthAndAction(openPayment)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium flex items-center gap-1.5 shadow-md">
               <i data-lucide="credit-card" class="w-4 h-4"></i> ยืนยันทำรายการ
             </button>
           </div>
@@ -213,14 +274,16 @@
 
   <!-- JavaScript Application Logic -->
   <script>
-    // Sample Initial Data (อัปเดต p4 เป็นโน้ตบุ๊กแล้ว)
+    // State Management
+    let currentUser = null; // null = Not logged in
+
     const initialProducts = [
       {
         id: 'p1',
         title: 'กล้อง Canon EOS 80D + เลนส์ 18-135mm',
         type: 'rent',
         category: 'อุปกรณ์ถ่ายภาพ',
-        price: 100,
+        price: 350,
         unit: 'บาท/วัน',
         imgUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500',
         ownerName: 'พี่ปอนด์ (นิเทศศาสตร์)',
@@ -232,6 +295,21 @@
       },
       {
         id: 'p2',
+        title: 'ชุดครุยรับปริญญา มหาวิทยาลัย (ไซส์ M)',
+        type: 'rent',
+        category: 'เสื้อผ้า/แต่งกาย',
+        price: 250,
+        unit: 'บาท/วัน',
+        imgUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500',
+        ownerName: 'พี่นัท (วิศวะฯ)',
+        ownerRole: 'ศิษย์เก่า',
+        rating: 4.9,
+        reviewsCount: 30,
+        status: 'available',
+        description: 'ชุดครุยเนื้อผ้าอย่างดี ตัดเย็บประณีต สภาพ 90% ซักแห้งพร้อมใช้งาน ถ่ายรูปวันซ้อมใหญ่หรือวันกิจกรรมได้เลย'
+      },
+      {
+        id: 'p3',
         title: 'หนังสือเรียน CALCULUS 1 สำหรับวิศวะฯ',
         type: 'borrow',
         category: 'หนังสือ/ชีตสรุป',
@@ -244,21 +322,6 @@
         reviewsCount: 24,
         status: 'available',
         description: 'มีรอยไฮไลท์จุดสำคัญไว้ให้หมดแล้ว เหมาะกับน้องๆ ปี 1 ที่กำลังเตรียมสอบกลางภาค ยืมได้ตลอดเทอม'
-      },
-      {
-        id: 'p3',
-        title: 'iPad Air 5 (M1) + Apple Pencil 2',
-        type: 'rent',
-        category: 'ไอที/อิเล็กทรอนิกส์',
-        price: 40,
-        unit: 'บาท/วัน',
-        imgUrl: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500',
-        ownerName: 'พี่เจน (สถาปัตย์)',
-        ownerRole: 'รุ่นพี่ปี 3',
-        rating: 4.8,
-        reviewsCount: 12,
-        status: 'available',
-        description: 'มี GoodNotes และ Procreate ติดเครื่องไว้ให้ ยืมไปจดเลกเชอร์หรือวาดรูปส่งงานได้สบายๆ'
       },
       {
         id: 'p4',
@@ -280,6 +343,52 @@
     let products = [...initialProducts];
     let currentFilter = 'all';
     let selectedProduct = null;
+
+    // Login & Auth Functions
+    function simulateFaceScan(role) {
+      if (role === 'student') {
+        currentUser = {
+          name: 'น้องเมย์ (คณะวิศวฯ)',
+          role: 'นักศึกษาปัจจุบัน',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
+        };
+      } else {
+        currentUser = {
+          name: 'พี่ปอนด์ (นิเทศศาสตร์)',
+          role: 'รุ่นพี่ปี 4 / ผู้ให้บริการ',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'
+        };
+      }
+
+      // Update UI
+      document.getElementById('guestProfile').classList.add('hidden');
+      document.getElementById('userProfile').classList.remove('hidden');
+      document.getElementById('userProfile').classList.add('flex');
+      
+      document.getElementById('currentUserName').innerText = currentUser.name;
+      document.getElementById('currentUserRole').innerText = currentUser.role;
+      document.getElementById('currentUserAvatar').src = currentUser.avatar;
+
+      toggleModal('loginModal');
+      alert(`ยืนยันตัวตนสำเร็จ! ยินดีต้อนรับ ${currentUser.name}`);
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('userProfile').classList.add('hidden');
+      document.getElementById('userProfile').classList.remove('flex');
+      document.getElementById('guestProfile').classList.remove('hidden');
+      alert('ออกจากระบบเรียบร้อยแล้ว');
+    }
+
+    function checkAuthAndAction(actionCallback) {
+      if (!currentUser) {
+        alert('กรุณาเข้าสู่ระบบ / ยืนยันตัวตนก่อนทำรายการ');
+        toggleModal('loginModal');
+      } else {
+        actionCallback();
+      }
+    }
 
     // Render Product List
     function renderProducts() {
@@ -426,8 +535,8 @@
         price: price,
         unit: type === 'rent' ? 'บาท/วัน' : type === 'borrow' ? 'บาท (มัดจำ)' : 'บาท (ขายขาด)',
         imgUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500',
-        ownerName: 'น้องเมย์ (ผู้ใช้งาน)',
-        ownerRole: 'นักศึกษาปัจจุบัน',
+        ownerName: currentUser ? currentUser.name : 'ผู้ใช้งานทั่วไป',
+        ownerRole: currentUser ? currentUser.role : 'นักศึกษาปัจจุบัน',
         rating: 5.0,
         reviewsCount: 1,
         status: 'available',
