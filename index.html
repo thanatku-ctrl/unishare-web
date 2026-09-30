@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniShare - ระบบเช่า-ยืม-ซื้อ สำหรับนักศึกษาในมหาวิทยาลัย</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Prompt Google Font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            uni: {
+              pink: '#FFB7B2',
+              pinkLight: '#FFF0F0',
+              blue: '#A2C4C9',
+              blueLight: '#EBF5F7',
+              sky: '#4A90E2',
+              green: '#B5EAD7',
+              greenLight: '#F0FAF6',
+              yellow: '#E2F0CB',
+              yellowWarm: '#FFDAC1',
+              purple: '#C7CEEA',
+              dark: '#2D3748',
+              card: '#FFFFFF'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Prompt', sans-serif; }
+    /* Custom scrollbar for soft feel */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .tab-active {
+      border-bottom: 3px solid #4A90E2;
+      color: #4A90E2;
+      font-weight: 600;
+    }
+    
+    /* Soft pastel card shadows */
+    .soft-shadow {
+      box-shadow: 0 10px 25px -5px rgba(162, 196, 201, 0.25), 0 8px 10px -6px rgba(162, 196, 201, 0.1);
+    }
+    .soft-shadow-hover:hover {
+      box-shadow: 0 15px 30px -5px rgba(162, 196, 201, 0.35), 0 10px 12px -5px rgba(162, 196, 201, 0.2);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col text-slate-700 bg-slate-50">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchMainTab('market')">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-300 via-sky-300 to-green-200 flex items-center justify-center text-white shadow-md">
+            <i class="fa-solid fa-graduation-cap text-xl text-slate-800"></i>
+          </div>
+          <div>
+            <span class="text-xl font-bold bg-gradient-to-r from-sky-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">UniShare</span>
+            <span class="hidden md:inline-block text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">มหาลัยเช่า-ยืม-ซื้อ</span>
+          </div>
+        </div>
+
+        <!-- Central Search Bar (Desktop) -->
+        <div class="hidden md:flex flex-1 max-w-md mx-8">
+          <div class="relative w-full">
+            <input type="text" id="globalSearchInput" onkeyup="handleSearchInput(event)" placeholder="ค้นหาชุดครุย หนังสือ กล้อง หรืออุปกรณ์หอพัก..." class="w-full pl-10 pr-4 py-2 rounded-full border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:bg-white transition-all">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          </div>
+        </div>
+
+        <!-- User Role Switcher & Profile -->
+        <div class="flex items-center gap-3">
+          <!-- Role Switcher Toggle -->
+          <div class="bg-slate-100 p-1 rounded-full flex items-center text-xs font-medium">
+            <button id="roleStudentBtn" onclick="setRole('student')" class="px-3 py-1.5 rounded-full transition-all duration-200 bg-white text-sky-600 shadow-sm font-semibold">
+              <i class="fa-solid fa-user-graduate mr-1"></i> นักศึกษา
+            </button>
+            <button id="roleSeniorBtn" onclick="setRole('senior')" class="px-3 py-1.5 rounded-full transition-all duration-200 text-slate-500 hover:text-slate-700">
+              <i class="fa-solid fa-store mr-1"></i> รุ่นพี่/ผู้ให้เช่า
+            </button>
+          </div>
+
+          <!-- User Profile & Status -->
+          <div class="relative flex items-center gap-2 pl-2 border-l border-slate-200">
+            <button onclick="openVerificationModal()" id="verificationBadge" class="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition">
+              <i class="fa-solid fa-shield-check"></i>
+              <span id="verifStatusText">ยืนยันตัวตนแล้ว</span>
+            </button>
+            
+            <div id="userAvatar" onclick="openProfileModal()" class="w-9 h-9 rounded-full bg-sky-200 border-2 border-white shadow-sm flex items-center justify-center font-bold text-sky-800 text-sm cursor-pointer hover:opacity-90">
+              นศ
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Secondary Navigation Tabs -->
+    <div class="flex border-b border-slate-200 mb-6 space-x-8 overflow-x-auto">
+      <button id="tabMarket" onclick="switchMainTab('market')" class="tab-active py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors">
+        <i class="fa-solid fa-store"></i> ตลาดสินค้าและบริการ
+      </button>
+      <button id="tabManage" onclick="switchMainTab('manage')" class="text-slate-500 hover:text-slate-700 py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors">
+        <i class="fa-solid fa-boxes-packing"></i> จัดการสินค้าของฉัน <span id="myProductCountBadge" class="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">2</span>
+      </button>
+      <button id="tabChat" onclick="switchMainTab('chat')" class="text-slate-500 hover:text-slate-700 py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors relative">
+        <i class="fa-solid fa-comments"></i> แชทข้อความ
+        <span id="unreadChatBadge" class="w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse"></span>
+      </button>
+      <button id="tabOrders" onclick="switchMainTab('orders')" class="text-slate-500 hover:text-slate-700 py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors">
+        <i class="fa-solid fa-receipt"></i> ประวัติรายการ & คำสั่งซื้อ
+      </button>
+    </div>
+
+    <!-- VIEW 1: MARKETPLACE TAB -->
+    <section id="viewMarket" class="space-y-6">
+      
+      <!-- Hero Banner -->
+      <div class="rounded-3xl bg-gradient-to-r from-sky-100 via-indigo-50 to-pink-100 p-6 md:p-8 relative overflow-hidden soft-shadow border border-white/60">
+        <div class="relative z-10 max-w-2xl">
+          <span class="inline-block px-3 py-1 bg-white/80 backdrop-blur rounded-full text-xs font-semibold text-sky-700 mb-3 shadow-sm">
+            🎓 สังคมแห่งการแบ่งปันภายในรั้วมหาวิทยาลัย
+          </span>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 leading-snug mb-2">
+            เช่า ยืม ซื้อ สิ่งของกับเพื่อนและรุ่นพี่ ได้ง่าย ปลอดภัย ไม่ต้องซื้อใหม่!
+          </h1>
+          <p class="text-slate-600 text-sm md:text-base mb-4">
+            ยืนยันตัวตนด้วยสแกนใบหน้า + บัตรนักศึกษา ชำระเงินผ่านระบบ PromptPay ได้รับใบเสร็จทันที
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-3 py-1.5 rounded-xl bg-white/90 text-slate-700 flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-shield-halved text-emerald-500"></i> ปลอดภัย 100%
+            </span>
+            <span class="px-3 py-1.5 rounded-xl bg-white/90 text-slate-700 flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-qrcode text-sky-500"></i> สแกนจ่าย QR Code
+            </span>
+            <span class="px-3 py-1.5 rounded-xl bg-white/90 text-slate-700 flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-star text-amber-400"></i> รีวิวส่งผลต่อการค้นหา
+            </span>
+          </div>
+        </div>
+        <div class="absolute -right-6 -bottom-8 opacity-20 md:opacity-40 pointer-events-none">
+          <i class="fa-solid fa-box-open text-[180px] text-sky-400"></i>
+        </div>
+      </div>
+
+      <!-- Filters & Sorting Control Bar -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 soft-shadow flex flex-col md:flex-row justify-between gap-4 items-center">
+        <!-- Service Type Filter Pills -->
+        <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          <button onclick="setFilterType('all')" id="btnFilterAll" class="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 text-white shadow-sm transition-all whitespace-nowrap">
+            ทั้งหมด
+          </button>
+          <button onclick="setFilterType('rent')" id="btnFilterRent" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">
+            <i class="fa-solid fa-clock text-sky-500 mr-1"></i> เช่า (Rental)
+          </button>
+          <button onclick="setFilterType('borrow')" id="btnFilterBorrow" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">
+            <i class="fa-solid fa-hand-holding-heart text-emerald-500 mr-1"></i> ยืมฟรี (Borrow)
+          </button>
+          <button onclick="setFilterType('buy')" id="btnFilterBuy" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">
+            <i class="fa-solid fa-cart-shopping text-pink-500 mr-1"></i> ซื้อขายมือสอง
+          </button>
+        </div>
+
+        <!-- Sorting Selector -->
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+          <label for="sortSelect" class="text-xs font-medium text-slate-500 whitespace-nowrap">เรียงตาม:</label>
+          <select id="sortSelect" onchange="renderProducts()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-300">
+            <option value="rating">⭐️ คะแนนรีวิว & จำนวนรีวิวสูงสุด (แนะนำ)</option>
+            <option value="priceLow">💵 ราคา: น้อยไปมาก</option>
+            <option value="priceHigh">💎 ราคา: มากไปน้อย</option>
+            <option value="newest">🆕 รายการใหม่ล่าสุด</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Dynamic Products Will Render Here -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: PRODUCT MANAGEMENT TAB -->
+    <section id="viewManage" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 soft-shadow">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">แผงจัดการสินค้าและบริการของฉัน</h2>
+          <p class="text-xs text-slate-500 mt-1">ในฐานะรุ่นพี่ / ผู้ให้บริการ สามารถลงรายการสินค้า แก้ไขสต็อก หรือเปลี่ยนสถานะได้ที่นี่</p>
+        </div>
+        <button onclick="openAddProductModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold text-xs shadow-md hover:opacity-90 transition flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-base"></i> ลงประกาศรายการใหม่
+        </button>
+      </div>
+
+      <!-- My Product List Table/Grid -->
+      <div class="bg-white rounded-2xl border border-slate-100 soft-shadow overflow-hidden">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">รายการสินค้าที่คุณลงทะเบียนไว้</span>
+        </div>
+        <div id="myProductsContainer" class="divide-y divide-slate-100">
+          <!-- Dynamic Items Rendered Here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: CHAT / MESSAGING TAB -->
+    <section id="viewChat" class="hidden">
+      <div class="bg-white rounded-2xl border border-slate-100 soft-shadow h-[600px] flex overflow-hidden">
+        
+        <!-- Chat Contacts Sidebar -->
+        <div class="w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50/50">
+          <div class="p-4 border-b border-slate-100 font-bold text-slate-700 flex justify-between items-center">
+            <span>กล่องข้อความสนทนา</span>
+            <span class="text-xs bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full font-normal">แชทภายในระบบ</span>
+          </div>
+          <div id="chatContactsList" class="flex-1 overflow-y-auto divide-y divide-slate-100">
+            <!-- Dynamic Contacts -->
+          </div>
+        </div>
+
+        <!-- Active Chat Conversation Area -->
+        <div class="hidden md:flex flex-1 flex-col bg-white">
+          <!-- Chat Header -->
+          <div id="activeChatHeader" class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+            <div class="flex items-center gap-3">
+              <div id="chatHeaderAvatar" class="w-10 h-10 rounded-full bg-sky-200 text-sky-800 font-bold flex items-center justify-center text-sm">
+                พี่
+              </div>
+              <div>
+                <div id="chatHeaderName" class="font-bold text-slate-800 text-sm">พี่นัท (วิศวะ ปี 4)</div>
+                <div id="chatHeaderItem" class="text-xs text-sky-600 font-medium">เรื่อง: ชุดครุยรับปริญญา มหาวิทยาลัย</div>
+              </div>
+            </div>
+            <button onclick="triggerQuickOrderFromChat()" class="px-3 py-1.5 bg-sky-50 text-sky-600 border border-sky-200 rounded-xl text-xs font-semibold hover:bg-sky-100 transition">
+              <i class="fa-solid fa-cart-arrow-down mr-1"></i> ทำรายการทันที
+            </button>
+          </div>
+
+          <!-- Messages Stream -->
+          <div id="chatMessagesStream" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/20">
+            <!-- Messages render here -->
+          </div>
+
+          <!-- Message Input Bar -->
+          <div class="p-3 border-t border-slate-100 bg-white flex items-center gap-2">
+            <input type="text" id="chatMessageInput" onkeyup="if(event.key==='Enter') sendChatMessage()" placeholder="พิมพ์ข้อความเพื่อนัดรับสินค้า หรือสอบถามรายละเอียด..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-sky-300">
+            <button onclick="sendChatMessage()" class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center hover:bg-sky-600 transition shadow-sm">
+              <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 4: ORDERS & TRANSACTIONS TAB -->
+    <section id="viewOrders" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-100 soft-shadow">
+        <h2 class="text-xl font-bold text-slate-800 mb-1">ประวัติรายการและคำสั่งซื้อ</h2>
+        <p class="text-xs text-slate-500 mb-4">แสดงสถานะคำสั่ง เช่า ยืม และซื้อ ของคุณ พร้อมใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt)</p>
+
+        <div id="ordersContainer" class="space-y-4">
+          <!-- Dynamic Orders Rendered Here -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: FACE SCAN & IDENTITY VERIFICATION -->
+  <div id="modalVerification" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 soft-shadow relative animate-in fade-in zoom-in duration-200">
+      <button onclick="closeModal('modalVerification')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl mx-auto mb-3">
+          <i class="fa-solid fa-face-viewfinder"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">ระบบยืนยันตัวตนสแกนใบหน้า</h3>
+        <p class="text-xs text-slate-500 mt-1">ยืนยันสิทธิ์นักศึกษาเพื่อความปลอดภัยในระบบเช่า-ยืม-ซื้อ</p>
+      </div>
+
+      <!-- Verification Step Graphic -->
+      <div class="bg-slate-900 rounded-2xl h-48 relative overflow-hidden flex flex-col items-center justify-center text-white mb-6 border-2 border-sky-400">
+        <div id="cameraPreview" class="text-center space-y-2">
+          <i class="fa-solid fa-user-check text-5xl text-sky-400 animate-pulse"></i>
+          <p class="text-xs text-slate-300">กรุณากดปุ่มจำลองการสแกนใบหน้า</p>
+        </div>
+        <!-- Scan Overlay -->
+        <div id="scanLine" class="hidden absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-sky-400 to-transparent animate-bounce"></div>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">รหัสนักศึกษา / Student ID</label>
+          <input type="text" id="verifStudentId" value="65011234" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">คณะ / สังกัด</label>
+          <input type="text" id="verifFaculty" value="คณะวิศวกรรมศาสตร์" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+        </div>
+        <button onclick="simulateFaceScan()" class="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold rounded-xl text-xs shadow-md hover:opacity-90 transition">
+          <i class="fa-solid fa-camera mr-1"></i> เริ่มจำลองการสแกนใบหน้า (Scan Face)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ADD PRODUCT FORM (For Seniors/Sellers) -->
+  <div id="modalAddProduct" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 soft-shadow relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal('modalAddProduct')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="mb-4">
+        <h3 class="text-lg font-bold text-slate-800">ลงรายการสินค้า/บริการใหม่</h3>
+        <p class="text-xs text-slate-500">กรอกข้อมูลสิ่งของที่ต้องการปล่อยเช่า ให้ยืม หรือขายมือสอง</p>
+      </div>
+
+      <form onsubmit="handleAddProductSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อรายการสินค้า *</label>
+          <input type="text" id="newTitle" required placeholder="เช่น หนังสือเรียน Calculus II, กล้อง Canon..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ประเภทบริการ *</label>
+            <select id="newType" onchange="togglePriceFieldHint()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+              <option value="rent">เช่า (Rental)</option>
+              <option value="borrow">ยืมฟรี (Borrow)</option>
+              <option value="buy">ขายมือสอง (Sell)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ราคา/ค่าเช่า (บาท) *</label>
+            <input type="number" id="newPrice" required value="100" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+            <span id="priceHint" class="text-[10px] text-slate-400">บาท / ต่อวัน</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">หมวดหมู่สินค้า *</label>
+          <select id="newCategory" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+            <option value="อุปกรณ์การเรียน">อุปกรณ์การเรียน / หนังสือ</option>
+            <option value="เครื่องแต่งกาย">เครื่องแต่งกาย / ชุดครุย / เครื่องแบบ</option>
+            <option value="ไอทีและกล้อง">กล้อง / ไอที / อุปกรณ์อิเล็กทรอนิกส์</option>
+            <option value="เครื่องใช้หอพัก">เครื่องใช้ไฟฟ้า / เครื่องใช้ในหอพัก</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">รูปภาพสินค้า (Image URL หรือ Emoji Icon) *</label>
+          <input type="text" id="newImgUrl" value="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500" placeholder="https://..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">รายละเอียดและเงื่อนไขการให้บริการ *</label>
+          <textarea id="newDesc" rows="3" required placeholder="ระบุสภาพสินค้า สถานที่นัดรับ และเงินประกัน (ถ้ามี)..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-sky-300 outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md hover:bg-emerald-600 transition">
+          <i class="fa-solid fa-check-circle mr-1"></i> ยืนยันการลงรายการ
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PAYMENT GATEWAY SIMULATOR -->
+  <div id="modalPayment" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 soft-shadow relative text-center">
+      <button onclick="closeModal('modalPayment')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <span class="inline-block px-3 py-1 bg-sky-100 text-sky-700 font-bold rounded-full text-xs mb-2">PromptPay QR Code</span>
+      <h3 class="text-base font-bold text-slate-800">ชำระเงินค่าบริการ</h3>
+      <p id="payItemTitle" class="text-xs text-slate-500 mb-4">รายการ: -</p>
+
+      <!-- QR Code Display -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 inline-block mb-4">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=UniSharePaymentPromptPay" alt="QR Code" class="w-40 h-40 mx-auto rounded-lg">
+        <p class="text-[11px] font-medium text-slate-500 mt-2">สแกนผ่านแอปธนาคารได้ทุกแห่ง</p>
+      </div>
+
+      <div class="bg-sky-50 rounded-xl p-3 mb-4 flex justify-between items-center text-xs">
+        <span class="text-slate-600">ยอดชำระสุทธิ:</span>
+        <span id="payAmountText" class="text-lg font-bold text-sky-600">฿0</span>
+      </div>
+
+      <button onclick="confirmPaymentSuccess()" class="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md hover:bg-emerald-600 transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-circle-check"></i> จำลองการยืนยันชำระเงินสำเร็จ
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 4: REVIEW & RATING FORM -->
+  <div id="modalReview" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 soft-shadow relative text-center">
+      <button onclick="closeModal('modalReview')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="w-12 h-12 bg-amber-100 text-amber-500 rounded-2xl flex items-center justify-center text-xl mx-auto mb-2">
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-800">รีวิวการใช้บริการ</h3>
+      <p id="reviewItemTitle" class="text-xs text-slate-500 mb-4">รายการสินค้า</p>
+
+      <!-- Rating Stars Selection -->
+      <div class="flex justify-center gap-2 mb-4 text-2xl text-amber-300">
+        <i class="fa-solid fa-star cursor-pointer hover:text-amber-400 transition" onclick="selectStarRating(1)"></i>
+        <i class="fa-solid fa-star cursor-pointer hover:text-amber-400 transition" onclick="selectStarRating(2)"></i>
+        <i class="fa-solid fa-star cursor-pointer hover:text-amber-400 transition" onclick="selectStarRating(3)"></i>
+        <i class="fa-solid fa-star cursor-pointer hover:text-amber-400 transition" onclick="selectStarRating(4)"></i>
+        <i class="fa-solid fa-star cursor-pointer hover:text-amber-400 transition text-amber-400" onclick="selectStarRating(5)" id="star5"></i>
+      </div>
+
+      <textarea id="reviewCommentInput" rows="3" placeholder="เขียนความประทับใจ สภาพสินค้า การบริการของผู้ให้เช่า..." class="w-full border border-slate-200 rounded-xl p-3 text-xs mb-4 focus:ring-2 focus:ring-sky-300 outline-none"></textarea>
+
+      <button onclick="submitReviewAction()" class="w-full py-2.5 bg-sky-500 text-white font-bold rounded-xl text-xs shadow-md hover:bg-sky-600 transition">
+        ส่งรีวิว (เพิ่ม Trust Score ให้ระบบ)
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Toast Box -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-xl text-xs font-medium z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+    <i class="fa-solid fa-circle-info text-sky-400 text-base" id="toastIcon"></i>
+    <span id="toastMsg">ข้อความแจ้งเตือน</span>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. MOCK STATE & INITIAL DATA (Mock Data)
+       ========================================================================== */
+    
+    // User Profile State
+    let currentUser = {
+      role: 'student', // 'student' or 'senior'
+      name: 'นักศึกษานาถ',
+      studentId: '65011234',
+      isVerified: true,
+      faculty: 'คณะวิศวกรรมศาสตร์'
+    };
+
+    // Initial Mock Products
+    let products = [
+      {
+        id: 'p1',
+        title: 'ชุดครุยรับปริญญา มหาวิทยาลัย (ไซส์ M)',
+        type: 'rent', // rent, borrow, buy
+        category: 'เครื่องแต่งกาย',
+        price: 250,
+        unit: 'บาท/วัน',
+        imgUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500',
+        ownerName: 'พี่นัท (วิศวะ ปี 4)',
+        ownerRole: 'รุ่นพี่',
+        rating: 4.9,
+        reviewsCount: 28,
+        status: 'available', // available, rented
+        description: 'ชุดครุยเนื้อผ้าอย่างดี ตัดเย็บประณีต สภาพ 98% ซักแห้งพร้อมใช้งาน นัดรับหน้าตึกกิจกรรมได้เลยครับ'
+      },
+      {
+        id: 'p2',
+        title: 'หนังสือเรียน Calculus II (ฉบับแปลไทย พร้อมเฉลย)',
+        type: 'borrow',
+        category: 'อุปกรณ์การเรียน',
+        price: 0,
+        unit: 'ยืมฟรี',
+        imgUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500',
+        ownerName: 'พี่แอน (วิทยาการคอมฯ)',
+        ownerRole: 'รุ่นพี่',
+        rating: 5.0,
+        reviewsCount: 15,
+        status: 'available',
+        description: 'ให้รุ่นน้องยืมอ่านฟรี 1 สารท มีโน้ตย่อสรุปสูตรสำคัญแนบไว้ให้ด้วยครับ'
+      },
+      {
+        id: 'p3',
+        title: 'กล้อง Canon EOS M50 + เลนส์ Kit (สำหรับงานส่งอาจารย์)',
+        type: 'rent',
+        category: 'ไอทีและกล้อง',
+        price: 350,
+        unit: 'บาท/วัน',
+        imgUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500',
+        ownerName: 'พี่เต้ (นิเทศศาสตร์)',
+        ownerRole: 'รุ่นพี่',
+        rating: 4.8,
+        reviewsCount: 42,
+        status: 'available',
+        description: 'เหมาะสำหรับน้องๆ ที่ต้องใช้อัดคลิปพรีเซนต์งาน หรือถ่ายรูปกิจกรรม มฮ. แถมการ์ด 64GB'
+      },
+      {
+        id: 'p4',
+        title: 'ตู้เย็นขนาดเล็ก 3.1 คิว (สำหรับติดหอพัก)',
+        type: 'buy',
+        category: 'เครื่องใช้หอพัก',
+        price: 1800,
+        unit: 'บาท (ขายขาด)',
+        imgUrl: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=500',
+        ownerName: 'พี่ต๊อบ (บริหารธุรกิจ)',
+        ownerRole: 'ศิษย์เก่า',
+        rating: 4.7,
+        reviewsCount: 9,
+        status: 'available',
+        description: 'ส่งต่อตู้เย็นสภาพดีมาก เย็นเจี๊ยบ ประหยัดไฟเบอร์ 5 เพิ่งเรียนจบจะย้ายหอกลับบ้าน'
+      }
+    ];
+
+    // Mock Chat Data
+    let chatContacts = [
+      {
+        id: 'c1',
+        name: 'พี่นัท (วิศวะ ปี 4)',
+        lastMsg: 'ได้ครับ นัดรับวันพรุ่งนี้เที่ยงตรงนะน้อง',
+        unread: false,
+        itemId: 'p1'
+      },
+      {
+        id: 'c2',
+        name: 'พี่แอน (วิทยาการคอมฯ)',
+        lastMsg: 'หนังสือยังอยู่จ้า ยืมไปอ่านได้เลยน้า',
+        unread: true,
+        itemId: 'p2'
+      }
+    ];
+
+    let chatMessages = {
+      c1: [
+        { sender: 'them', text: 'สวัสดีครับน้อง สอบถามเรื่องชุดครุยเพิ่มเติมได้นะ' },
+        { sender: 'me', text: 'สอบถามครับพี่นัท พรุ่งนี้ช่วงเที่ยงสะดวกนัดรับแถวไหนครับ?' },
+        { sender: 'them', text: 'ได้ครับ นัดรับวันพรุ่งนี้เที่ยงตรงนะน้อง ตรงใต้ตึกวิศวะ' }
+      ]
+    };
+
+    // Orders History Array
+    let orders = [
+      {
+        id: 'ORD-9821',
+        productTitle: 'หนังสือเรียน Calculus II',
+        amount: 0,
+        type: 'borrow',
+        status: 'completed', // pending, active, completed
+        date: '28 ก.ย. 2026',
+        owner: 'พี่แอน (วิทยาการคอมฯ)'
+      }
+    ];
+
+    // State Variables
+    let activeFilterType = 'all'; // all, rent, borrow, buy
+    let currentActiveChatId = 'c1';
+    let pendingPayOrder = null;
+    let selectedStar = 5;
+
+    /* ==========================================================================
+       2. INITIALIZATION & TAB NAVIGATION
+       ========================================================================== */
+    window.onload = function() {
+      renderProducts();
+      renderMyProducts();
+      renderChatContacts();
+      renderChatMessages('c1');
+      renderOrders();
+    };
+
+    function switchMainTab(tabName) {
+      // Hide all view sections
+      document.getElementById('viewMarket').classList.add('hidden');
+      document.getElementById('viewManage').classList.add('hidden');
+      document.getElementById('viewChat').classList.add('hidden');
+      document.getElementById('viewOrders').classList.add('hidden');
+
+      // Deactivate tab styles
+      const tabs = ['tabMarket', 'tabManage', 'tabChat', 'tabOrders'];
+      tabs.forEach(t => {
+        const el = document.getElementById(t);
+        el.className = 'text-slate-500 hover:text-slate-700 py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors relative';
+      });
+
+      // Activate selected view & tab
+      if(tabName === 'market') {
+        document.getElementById('viewMarket').classList.remove('hidden');
+        document.getElementById('tabMarket').className = 'tab-active py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors';
+      } else if(tabName === 'manage') {
+        document.getElementById('viewManage').classList.remove('hidden');
+        document.getElementById('tabManage').className = 'tab-active py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors';
+      } else if(tabName === 'chat') {
+        document.getElementById('viewChat').classList.remove('hidden');
+        document.getElementById('tabChat').className = 'tab-active py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors';
+        document.getElementById('unreadChatBadge').classList.add('hidden');
+      } else if(tabName === 'orders') {
+        document.getElementById('viewOrders').classList.remove('hidden');
+        document.getElementById('tabOrders').className = 'tab-active py-3 px-1 text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-colors';
+      }
+    }
+
+    // Role Switcher (Student View vs Senior View)
+    function setRole(role) {
+      currentUser.role = role;
+      const btnStudent = document.getElementById('roleStudentBtn');
+      const btnSenior = document.getElementById('roleSeniorBtn');
+
+      if(role === 'student') {
+        btnStudent.className = 'px-3 py-1.5 rounded-full transition-all duration-200 bg-white text-sky-600 shadow-sm font-semibold';
+        btnSenior.className = 'px-3 py-1.5 rounded-full transition-all duration-200 text-slate-500 hover:text-slate-700';
+        showToast('สลับเข้าสู่โหมด "นักศึกษา/ผู้เช่า"', 'fa-user-graduate');
+      } else {
+        btnSenior.className = 'px-3 py-1.5 rounded-full transition-all duration-200 bg-white text-emerald-600 shadow-sm font-semibold';
+        btnStudent.className = 'px-3 py-1.5 rounded-full transition-all duration-200 text-slate-500 hover:text-slate-700';
+        showToast('สลับเข้าสู่โหมด "รุ่นพี่/ผู้ให้เช่า-ผู้ขาย"', 'fa-store');
+      }
+    }
+
+    /* ==========================================================================
+       3. PRODUCTS RENDERING & FILTERING
+       ========================================================================== */
+    function setFilterType(type) {
+      activeFilterType = type;
+      
+      const buttons = {
+        all: 'btnFilterAll',
+        rent: 'btnFilterRent',
+        borrow: 'btnFilterBorrow',
+        buy: 'btnFilterBuy'
+      };
+
+      Object.keys(buttons).forEach(k => {
+        const btn = document.getElementById(buttons[k]);
+        if(k === type) {
+          btn.className = 'px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 text-white shadow-sm transition-all whitespace-nowrap';
+        } else {
+          btn.className = 'px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap';
+        }
+      });
+
+      renderProducts();
+    }
+
+    function handleSearchInput(e) {
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productsGrid');
+      const searchTerm = document.getElementById('globalSearchInput').value.toLowerCase();
+      const sortVal = document.getElementById('sortSelect').value;
+
+      // Filter products
+      let filtered = products.filter(p => {
+        const matchType = activeFilterType === 'all' || p.type === activeFilterType;
+        const matchSearch = p.title.toLowerCase().includes(searchTerm) || p.description.toLowerCase().includes(searchTerm) || p.category.toLowerCase().includes(searchTerm);
+        return matchType && matchSearch;
+      });
+
+      // Sort products according to algorithm
+      if (sortVal === 'rating') {
+        // High Rating and Reviews Algorithm
+        filtered.sort((a, b) => (b.rating * b.reviewsCount) - (a.rating * a.reviewsCount));
+      } else if (sortVal === 'priceLow') {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (sortVal === 'priceHigh') {
+        filtered.sort((a, b) => b.price - a.price);
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center bg-white rounded-3xl border border-slate-100">
+            <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-2"></i>
+            <p class="text-slate-500 font-medium text-sm">ไม่พบรายการสินค้าตรงตามคำค้นหา</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        // Type badge styling
+        let typeBadge = '';
+        if(p.type === 'rent') {
+          typeBadge = `<span class="bg-sky-100 text-sky-700 text-[11px] font-bold px-2.5 py-1 rounded-lg"><i class="fa-solid fa-clock mr-1"></i> ให้เช่า</span>`;
+        } else if(p.type === 'borrow') {
+          typeBadge = `<span class="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-lg"><i class="fa-solid fa-hand-holding-heart mr-1"></i> ยืมฟรี</span>`;
+        } else {
+          typeBadge = `<span class="bg-pink-100 text-pink-700 text-[11px] font-bold px-2.5 py-1 rounded-lg"><i class="fa-solid fa-cart-shopping mr-1"></i> ซื้อขาย</span>`;
+        }
+
+        return `
+          <div class="bg-white rounded-2xl overflow-hidden border border-slate-100 soft-shadow soft-shadow-hover transition-all duration-200 flex flex-col">
+            <!-- Image & Badge Container -->
+            <div class="h-44 bg-slate-100 relative overflow-hidden">
+              <img src="${p.imgUrl}" alt="${p.title}" class="w-full h-full object-cover">
+              <div class="absolute top-3 left-3">
+                ${typeBadge}
+              </div>
+              <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-0.5 rounded-full text-[11px] font-bold text-amber-500 flex items-center shadow-sm">
+                <i class="fa-solid fa-star mr-1"></i> ${p.rating} (${p.reviewsCount})
+              </div>
+            </div>
+
+            <!-- Content Container -->
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 font-medium">${p.category}</span>
+                <h3 class="font-bold text-slate-800 text-sm line-clamp-1 mb-1">${p.title}</h3>
+                <p class="text-xs text-slate-500 line-clamp-2 mb-3">${p.description}</p>
+              </div>
+
+              <div>
+                <!-- Owner & Price Footer -->
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100 mb-3">
+                  <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                    <i class="fa-solid fa-circle-user text-slate-400"></i>
+                    <span class="truncate max-w-[110px]">${p.ownerName}</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-base font-extrabold text-sky-600">${p.price === 0 ? 'ฟรี' : '฿' + p.price}</span>
+                    <span class="text-[10px] text-slate-400 block">${p.unit}</span>
+                  </div>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="handleProductAction('${p.id}')" class="w-full py-2 bg-slate-900 hover:bg-sky-600 text-white font-medium rounded-xl text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-circle-play text-xs"></i> เลือกรายการนี้
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ==========================================================================
+       4. SELLER / SENIOR PRODUCT MANAGEMENT
+       ========================================================================== */
+    function renderMyProducts() {
+      const container = document.getElementById('myProductsContainer');
+      document.getElementById('myProductCountBadge').innerText = products.length;
+
+      container.innerHTML = products.map(p => `
+        <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <img src="${p.imgUrl}" class="w-14 h-14 rounded-xl object-cover bg-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-slate-800 text-sm">${p.title}</h4>
+                <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600">${p.type === 'rent' ? 'เช่า' : p.type==='borrow' ? 'ยืม' : 'ขาย'}</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">${p.price} ${p.unit} • รีวิว ⭐ ${p.rating} (${p.reviewsCount} รีวิว)</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button onclick="toggleProductStatus('${p.id}')" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50">
+              สถานะ: ${p.status === 'available' ? '🟢 พร้อมบริการ' : '🔴 มีผู้เช่าแล้ว'}
+            </button>
+            <button onclick="deleteProduct('${p.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddProductModal() {
+      document.getElementById('modalAddProduct').classList.remove('hidden');
+    }
+
+    function togglePriceFieldHint() {
+      const type = document.getElementById('newType').value;
+      const hint = document.getElementById('priceHint');
+      const priceInput = document.getElementById('newPrice');
+
+      if(type === 'borrow') {
+        priceInput.value = 0;
+        priceInput.disabled = true;
+        hint.innerText = 'ยืมฟรี 0 บาท';
+      } else if(type === 'rent') {
+        priceInput.disabled = false;
+        hint.innerText = 'บาท / ต่อวัน';
+      } else {
+        priceInput.disabled = false;
+        hint.innerText = 'บาท / ราคาซื้อขาย';
+      }
+    }
+
+    function handleAddProductSubmit(e) {
+      e.preventDefault();
+      const newP = {
+        id: 'p' + (products.length + 1),
+        title: document.getElementById('newTitle').value,
+        type: document.getElementById('newType').value,
+        category: document.getElementById('newCategory').value,
+        price: parseFloat(document.getElementById('newPrice').value) || 0,
+        unit: document.getElementById('newType').value === 'rent' ? 'บาท/วัน' : 'บาท',
+        imgUrl: document.getElementById('newImgUrl').value || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500',
+        ownerName: currentUser.name + ' (เจ้าของรายการ)',
+        ownerRole: 'ผู้ให้เช่า',
+        rating: 5.0,
+        reviewsCount: 1,
+        status: 'available',
+        description: document.getElementById('newDesc').value
+      };
+
+      products.unshift(newP);
+      renderProducts();
+      renderMyProducts();
+      closeModal('modalAddProduct');
+      showToast('เพิ่มรายการสินค้าลงระบบเรียบร้อย!', 'fa-circle-check');
+    }
+
+    function deleteProduct(id) {
+      products = products.filter(p => p.id !== id);
+      renderProducts();
+      renderMyProducts();
+      showToast('ลบรายการสินค้าเรียบร้อย', 'fa-trash');
+    }
+
+    /* ==========================================================================
+       5. TRANSACTION WORKFLOW (Order, Payment, E-Receipt, Review)
+       ========================================================================== */
+    function handleProductAction(productId) {
+      const p = products.find(item => item.id === productId);
+      if(!p) return;
+
+      if(!currentUser.isVerified) {
+        openVerificationModal();
+        showToast('กรุณายืนยันตัวตนสแกนใบหน้าก่อนทำรายการ', 'fa-shield-exclamation');
+        return;
+      }
+
+      // If price is 0 (Borrowing)
+      if(p.price === 0) {
+        // Direct Borrow Order
+        const newOrder = {
+          id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+          productTitle: p.title,
+          amount: 0,
+          type: 'borrow',
+          status: 'completed',
+          date: new Date().toLocaleDateString('th-TH'),
+          owner: p.ownerName,
+          productId: p.id
+        };
+        orders.unshift(newOrder);
+        renderOrders();
+        showToast('ส่งคำขอยืมสินค้าเรียบร้อยแล้ว!', 'fa-circle-check');
+        switchMainTab('orders');
+      } else {
+        // Open Payment Modal
+        pendingPayOrder = p;
+        document.getElementById('payItemTitle').innerText = 'รายการ: ' + p.title;
+        document.getElementById('payAmountText').innerText = '฿' + p.price;
+        document.getElementById('modalPayment').classList.remove('hidden');
+      }
+    }
+
+    function confirmPaymentSuccess() {
+      if(!pendingPayOrder) return;
+
+      const newOrder = {
+        id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+        productTitle: pendingPayOrder.title,
+        amount: pendingPayOrder.price,
+        type: pendingPayOrder.type,
+        status: 'completed',
+        date: new Date().toLocaleDateString('th-TH'),
+        owner: pendingPayOrder.ownerName,
+        productId: pendingPayOrder.id
+      };
+
+      orders.unshift(newOrder);
+      renderOrders();
+      closeModal('modalPayment');
+      showToast('ชำระเงินสำเร็จ ออกใบเสร็จ E-Receipt เรียบร้อย!', 'fa-receipt');
+      switchMainTab('orders');
+    }
+
+    function renderOrders() {
+      const container = document.getElementById('ordersContainer');
+      if(orders.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">ยังไม่มีประวัติการทำรายการ</p>';
+        return;
+      }
+
+      container.innerHTML = orders.map(o => `
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-sky-600 bg-sky-100 px-2 py-0.5 rounded">${o.id}</span>
+              <span class="text-xs text-slate-400">${o.date}</span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">${o.productTitle}</h4>
+            <p class="text-xs text-slate-500">ผู้ให้บริการ: ${o.owner} • ยอดรวม: <b>${o.amount === 0 ? 'ฟรี' : '฿' + o.amount}</b></p>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            <button onclick="openReviewModal('${o.productTitle}', '${o.productId}')" class="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-xs font-semibold hover:bg-amber-600 transition shadow-sm">
+              <i class="fa-solid fa-star mr-1"></i> รีวิวความพึงพอใจ
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       6. REVIEW & RATING ALGORITHM
+       ========================================================================== */
+    let activeReviewProductId = null;
+
+    function openReviewModal(itemTitle, productId) {
+      activeReviewProductId = productId;
+      document.getElementById('reviewItemTitle').innerText = itemTitle;
+      document.getElementById('modalReview').classList.remove('hidden');
+    }
+
+    function selectStarRating(starNum) {
+      selectedStar = starNum;
+      // Visual Feedback Code
+      showToast(`เลือกคะแนน ${starNum} ดาว`, 'fa-star');
+    }
+
+    function submitReviewAction() {
+      if(!activeReviewProductId) {
+        closeModal('modalReview');
+        return;
+      }
+
+      // Find Product and update rating algorithmically
+      const prod = products.find(p => p.id === activeReviewProductId);
+      if(prod) {
+        const totalScore = (prod.rating * prod.reviewsCount) + selectedStar;
+        prod.reviewsCount += 1;
+        prod.rating = parseFloat((totalScore / prod.reviewsCount).toFixed(1));
+        
+        renderProducts();
+        showToast('บันทึกรีวิวสำเร็จ! ช่วยดันลำดับสินค้าขึ้นการค้นหา', 'fa-circle-check');
+      }
+
+      closeModal('modalReview');
+    }
+
+    /* ==========================================================================
+       7. CHAT SIMULATOR
+       ========================================================================== */
+    function renderChatContacts() {
+      const container = document.getElementById('chatContactsList');
+      container.innerHTML = chatContacts.map(c => `
+        <div onclick="selectChatContact('${c.id}')" class="p-3.5 hover:bg-slate-100/80 cursor-pointer transition ${currentActiveChatId === c.id ? 'bg-sky-50/80 border-l-4 border-sky-500' : ''}">
+          <div class="flex justify-between items-start mb-1">
+            <span class="font-bold text-slate-800 text-xs">${c.name}</span>
+            <span class="text-[10px] text-slate-400">12:30</span>
+          </div>
+          <p class="text-xs text-slate-500 truncate">${c.lastMsg}</p>
+        </div>
+      `).join('');
+    }
+
+    function selectChatContact(id) {
+      currentActiveChatId = id;
+      renderChatContacts();
+      renderChatMessages(id);
+    }
+
+    function renderChatMessages(chatId) {
+      const stream = document.getElementById('chatMessagesStream');
+      const msgs = chatMessages[chatId] || [];
+
+      stream.innerHTML = msgs.map(m => `
+        <div class="flex ${m.sender === 'me' ? 'justify-end' : 'justify-start'}">
+          <div class="${m.sender === 'me' ? 'bg-sky-500 text-white' : 'bg-white text-slate-700 border border-slate-100'} px-3.5 py-2 rounded-2xl max-w-xs text-xs shadow-sm">
+            ${m.text}
+          </div>
+        </div>
+      `).join('');
+
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatMessageInput');
+      const text = input.value.trim();
+      if(!text) return;
+
+      if(!chatMessages[currentActiveChatId]) {
+        chatMessages[currentActiveChatId] = [];
+      }
+
+      chatMessages[currentActiveChatId].push({ sender: 'me', text: text });
+      input.value = '';
+      renderChatMessages(currentActiveChatId);
+
+      // Automated Mock Reply
+      setTimeout(() => {
+        chatMessages[currentActiveChatId].push({ 
+          sender: 'them', 
+          text: 'รับทราบครับน้อง สามารถกดทำรายการเช่า-ยืมในระบบเพื่อยืนยันคำสั่งซื้อได้เลยครับ!' 
+        });
+        renderChatMessages(currentActiveChatId);
+      }, 1000);
+    }
+
+    function triggerQuickOrderFromChat() {
+      switchMainTab('market');
+      showToast('กรุณาเลือกรายการที่ต้องการทำธุรกรรม', 'fa-hand-pointer');
+    }
+
+    /* ==========================================================================
+       8. FACE SCAN SIMULATOR
+       ========================================================================== */
+    function openVerificationModal() {
+      document.getElementById('modalVerification').classList.remove('hidden');
+    }
+
+    function simulateFaceScan() {
+      const scanLine = document.getElementById('scanLine');
+      scanLine.classList.remove('hidden');
+      
+      showToast('กำลังประมวลผลสแกนใบหน้า...', 'fa-face-viewfinder');
+
+      setTimeout(() => {
+        scanLine.classList.add('hidden');
+        currentUser.isVerified = true;
+        
+        document.getElementById('verifStatusText').innerText = 'ยืนยันตัวตนแล้ว';
+        closeModal('modalVerification');
+        showToast('ยืนยันตัวตนด้วยสแกนใบหน้าสำเร็จ!', 'fa-shield-check');
+      }, 1500);
+    }
+
+    /* ==========================================================================
+       9. UTILITY FUNCTIONS (Modal & Toast)
+       ========================================================================== */
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function showToast(message, iconClass = 'fa-circle-info') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.innerText = message;
+      toastIcon.className = `fa-solid ${iconClass} text-sky-400 text-base`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
